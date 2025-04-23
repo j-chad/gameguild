@@ -24,15 +24,8 @@ impl Display for AppEnv {
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(unused)]
-struct Database {
-    url: String,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct Settings {
-    pub database_url: String,
-    pub server_port: u16,
+    pub port: u16,
     pub env: AppEnv,
 }
 
