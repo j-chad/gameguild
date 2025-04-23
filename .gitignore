@@ -239,5 +239,3 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/rust,svelte,linux,windows,macos,node
-
-config/local.toml

@@ -1,13 +1,26 @@
 use config::Config;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use std::fmt;
+use std::fmt::Display;
 use std::path::Path;
 
-#[derive(Debug, PartialEq, Eq, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum AppEnv {
     Development,
     Stage,
     Production,
+}
+
+impl Display for AppEnv {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            AppEnv::Development => "development",
+            AppEnv::Stage => "stage",
+            AppEnv::Production => "production",
+        };
+        write!(f, "{}", s)
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -29,7 +42,7 @@ struct BootstrapSettings {
 }
 
 impl Settings {
-    fn get_env_file_name(env: AppEnv) -> String {
+    fn get_env_file_name(env: &AppEnv) -> String {
         match env {
             AppEnv::Development => "develop.toml",
             AppEnv::Stage => "stage.toml",
@@ -48,7 +61,7 @@ impl Settings {
         let mut builder =
             Config::builder().add_source(config::File::from(base_path.join("default.toml")));
 
-        if let Some(env) = environment {
+        if let Some(ref env) = environment {
             builder = builder.add_source(config::File::from(
                 base_path.join(Self::get_env_file_name(env)),
             ));
@@ -56,7 +69,8 @@ impl Settings {
 
         builder = builder
             .add_source(config::File::from(base_path.join("local.toml")).required(false))
-            .add_source(config::Environment::with_prefix("APP"));
+            .add_source(config::Environment::with_prefix("APP"))
+            .set_override_option("env", environment.map(|env| env.to_string()))?;
 
         builder.build()
     }
@@ -71,6 +85,7 @@ impl Settings {
         let env: AppEnv = Self::get_runtime_env()?;
 
         let config = Self::get_config(Some(env))?;
+
         config.try_deserialize::<Settings>()
     }
 }
