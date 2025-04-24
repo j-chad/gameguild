@@ -50,6 +50,7 @@ pub struct AppSettings {
 pub struct PostgreSQLSettings {
     pub url: String,
     pub max_connections: u32,
+    pub lazy: bool,
 }
 
 #[derive(Debug, Deserialize, Clone)]
