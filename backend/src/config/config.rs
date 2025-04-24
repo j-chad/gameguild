@@ -7,6 +7,7 @@ use std::path::Path;
 #[derive(Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum AppEnv {
+    Local,
     Development,
     Stage,
     Production,
@@ -15,6 +16,7 @@ pub enum AppEnv {
 impl Display for AppEnv {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
+            AppEnv::Local => "local",
             AppEnv::Development => "development",
             AppEnv::Stage => "stage",
             AppEnv::Production => "production",
@@ -51,6 +53,7 @@ struct BootstrapSettings {
 impl Settings {
     fn get_env_file_name(env: &AppEnv) -> String {
         match env {
+            AppEnv::Local => "local.toml",
             AppEnv::Development => "develop.toml",
             AppEnv::Stage => "stage.toml",
             AppEnv::Production => "production.toml",
@@ -75,7 +78,7 @@ impl Settings {
         }
 
         builder = builder
-            .add_source(config::File::from(base_path.join("local.toml")).required(false))
+            .add_source(config::File::from(base_path.join("override.toml")).required(false))
             .add_source(config::Environment::with_prefix("APP"))
             .set_override_option("env", environment.map(|env| env.to_string()))?;
 
