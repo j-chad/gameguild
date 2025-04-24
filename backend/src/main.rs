@@ -1,3 +1,8 @@
+use crate::app::create_app;
+use crate::db::connect_db;
+use crate::state::{AppState, SharedState};
+use std::sync::Arc;
+
 // src/main.rs
 mod app;
 mod config;
@@ -11,15 +16,17 @@ async fn main() -> anyhow::Result<()> {
     let config = config::Settings::new()?;
     logging::init_tracing(&config.logging)?;
 
-    tracing::info!("Starting application in {} mode", config.env);
-    // let db = connect_db(&config.database_url).await?;
-    // let app_state = AppState::new(db.clone(), config);
-    //
-    // let app = create_app(app_state);
-    //
-    // let addr = "127.0.0.1:3000".parse()?;
-    // tracing::info!("Listening on {}", addr);
-    // axum::Server::bind(&addr).serve(app.into_make_service()).await?;
+    tracing::info!("Starting application in {} environment", config.env);
+    let db = connect_db(&config.postgres).await?;
+    let app_state: SharedState = Arc::new(AppState::new(db, config.clone()));
+
+    let app = create_app(app_state);
+    let addr = format!("{}:{}", config.app.bind_address, config.app.port);
+
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    tracing::info!("Listening on {}", listener.local_addr()?);
+
+    axum::serve(listener, app).await?;
 
     Ok(())
 }

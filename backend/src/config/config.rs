@@ -4,7 +4,7 @@ use std::fmt;
 use std::fmt::Display;
 use std::path::Path;
 
-#[derive(Debug, PartialEq, Eq, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Deserialize, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum AppEnv {
     Local,
@@ -25,21 +25,34 @@ impl Display for AppEnv {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Deserialize, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum LogFormat {
     JSON,
     Pretty,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
-    pub port: u16,
     pub env: AppEnv,
+    pub app: AppSettings,
     pub logging: LoggingSettings,
+    pub postgres: PostgreSQLSettings,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
+pub struct AppSettings {
+    pub port: u16,
+    pub bind_address: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct PostgreSQLSettings {
+    pub url: String,
+    pub max_connections: u32,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct LoggingSettings {
     pub level: String,
     pub format: LogFormat,
