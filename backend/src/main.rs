@@ -3,13 +3,15 @@ mod app;
 mod config;
 mod db;
 mod error;
+mod logging;
 mod state;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt::init();
-
     let config = config::Settings::new()?;
+    logging::init_tracing(&config.logging)?;
+
+    tracing::info!("Starting application in {} mode", config.env);
     // let db = connect_db(&config.database_url).await?;
     // let app_state = AppState::new(db.clone(), config);
     //

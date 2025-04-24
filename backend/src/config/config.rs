@@ -1,10 +1,10 @@
 use config::Config;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::fmt;
 use std::fmt::Display;
 use std::path::Path;
 
-#[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum AppEnv {
     Development,
@@ -23,10 +23,24 @@ impl Display for AppEnv {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LogFormat {
+    JSON,
+    Pretty,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct Settings {
     pub port: u16,
     pub env: AppEnv,
+    pub logging: LoggingSettings,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct LoggingSettings {
+    pub level: String,
+    pub format: LogFormat,
 }
 
 #[derive(Debug, Deserialize)]
