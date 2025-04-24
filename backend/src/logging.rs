@@ -19,9 +19,7 @@ pub fn init_tracing(config: &config::LoggingSettings) -> anyhow::Result<()> {
             subscriber.with(json_layer).init();
         }
         config::LogFormat::Pretty => {
-            let pretty_layer = tracing_subscriber::fmt::layer()
-                .with_target(false)
-                .with_writer(std::io::stdout);
+            let pretty_layer = tracing_subscriber::fmt::layer().with_writer(std::io::stdout);
             subscriber.with(pretty_layer).init();
         }
     }
