@@ -8,7 +8,10 @@ mod app;
 mod config;
 mod db;
 mod error;
+mod handlers;
 mod logging;
+mod routes;
+mod services;
 mod state;
 
 #[tokio::main]
