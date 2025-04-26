@@ -3,7 +3,6 @@ use crate::db::connect_db;
 use crate::state::{AppState, SharedState};
 use std::sync::Arc;
 
-// src/main.rs
 mod app;
 mod config;
 mod db;
