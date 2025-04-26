@@ -9,9 +9,12 @@ mod db;
 mod error;
 mod handlers;
 mod logging;
+mod queries;
 mod routes;
+mod schemas;
 mod services;
 mod state;
+mod utils;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
