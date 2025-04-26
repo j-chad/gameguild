@@ -1,0 +1,26 @@
+networks:
+  game-guildnet:
+volumes:
+  game-guild-postgres-data:
+services:
+  postgres:
+    image: postgres:latest
+    restart: unless-stopped
+    container_name: game-guild-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: gameguild
+    volumes:
+      - game-guild-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: "pg_isready -q -d gameguild -U postgres"
+      interval: 30s
+      timeout: 10s
+      retries: 100
+      start_period: 40s
+      start_interval: 5s
+    ports:
+      - "5432:5432"
+    networks:
+      - game-guildnet
