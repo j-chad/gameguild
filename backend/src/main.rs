@@ -9,6 +9,7 @@ mod db;
 mod error;
 mod handlers;
 mod logging;
+mod models;
 mod queries;
 mod routes;
 mod schemas;
