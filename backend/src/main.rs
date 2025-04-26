@@ -7,6 +7,7 @@ mod app;
 mod config;
 mod db;
 mod error;
+mod errors;
 mod handlers;
 mod logging;
 mod models;
