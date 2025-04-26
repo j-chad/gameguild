@@ -6,17 +6,10 @@ use std::sync::Arc;
 mod app;
 mod config;
 mod db;
-mod error;
 mod errors;
-mod handlers;
+mod features;
 mod logging;
-mod models;
-mod queries;
-mod routes;
-mod schemas;
-mod services;
 mod state;
-mod utils;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

@@ -1,6 +1,6 @@
-use crate::queries::auth::{find_user_id_by_email, find_user_id_by_username, insert_user};
-use crate::schemas::auth::RegisterRequest;
-use crate::utils::password::hash_password;
+use super::queries::{find_user_id_by_email, find_user_id_by_username, insert_user};
+use super::schemas::RegisterRequest;
+use super::utils::password::hash_password;
 
 pub async fn register_user(
     pool: &sqlx::PgPool,

@@ -1,4 +1,4 @@
-use crate::routes::build_router;
+use crate::features::build_router;
 use crate::state::SharedState;
 use axum::Router;
 use tower_http::trace::TraceLayer;

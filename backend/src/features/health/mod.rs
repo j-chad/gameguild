@@ -1,9 +1,11 @@
-use crate::services;
 use crate::state::SharedState;
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::response::{IntoResponse, Json};
+use axum::response::IntoResponse;
 use axum::routing::post;
+use axum::Json;
+
+mod service;
 
 pub fn build_router() -> axum::Router<SharedState> {
     axum::Router::new()
@@ -12,11 +14,11 @@ pub fn build_router() -> axum::Router<SharedState> {
 }
 
 async fn health_check(State(state): State<SharedState>) -> impl IntoResponse {
-    let report = services::health::run_health_checks(&state).await;
+    let report = service::run_health_checks(&state).await;
 
     let status = match report.result {
-        services::health::HealthCheckResult::Ok => StatusCode::OK,
-        services::health::HealthCheckResult::Failed(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        service::HealthCheckResult::Ok => StatusCode::OK,
+        service::HealthCheckResult::Failed(_) => StatusCode::INTERNAL_SERVER_ERROR,
     };
 
     (status, Json(report))
