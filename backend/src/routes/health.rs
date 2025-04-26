@@ -3,12 +3,12 @@ use crate::services::health::HealthReport;
 use crate::state::SharedState;
 use axum::extract::State;
 use axum::http::StatusCode;
+use axum::response::Json;
 use axum::routing::post;
-use axum::{response::Json, routing::get};
 
 pub fn build_router() -> axum::Router<SharedState> {
     axum::Router::new()
-        .route("/ping", get(|| async { "pong" }))
+        .route("/ping", post(|| async { "pong" }))
         .route("/check", post(health_check))
 }
 
