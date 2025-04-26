@@ -17,3 +17,6 @@ sysinfo = "0.34.2"
 argon2 = "0.5.3"
 uuid = "1.16.0"
 chrono = "0.4.40"
+
+[profile.dev.package.sqlx-macros]
+opt-level = 3

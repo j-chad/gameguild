@@ -1,0 +1,3 @@
+[tasks.cache-db]
+command = "cargo"
+args = ["sqlx", "prepare"]
