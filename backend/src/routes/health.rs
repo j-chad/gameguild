@@ -1,9 +1,8 @@
 use crate::services;
-use crate::services::health::HealthReport;
 use crate::state::SharedState;
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::response::Json;
+use axum::response::{IntoResponse, Json};
 use axum::routing::post;
 
 pub fn build_router() -> axum::Router<SharedState> {
@@ -12,7 +11,7 @@ pub fn build_router() -> axum::Router<SharedState> {
         .route("/check", post(health_check))
 }
 
-async fn health_check(State(state): State<SharedState>) -> (StatusCode, Json<HealthReport>) {
+async fn health_check(State(state): State<SharedState>) -> impl IntoResponse {
     let report = services::health::run_health_checks(&state).await;
 
     let status = match report.result {

@@ -1,6 +1,7 @@
 use crate::state::SharedState;
 use axum::Router;
 
+mod auth;
 mod health;
 
 pub fn build_router() -> Router<SharedState> {
@@ -8,5 +9,7 @@ pub fn build_router() -> Router<SharedState> {
 }
 
 pub fn build_v1_router() -> Router<SharedState> {
-    Router::new().nest("/health", health::build_router())
+    Router::new()
+        .nest("/health", health::build_router())
+        .nest("/auth", auth::build_router())
 }
