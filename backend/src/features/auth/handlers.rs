@@ -93,6 +93,10 @@ pub async fn logout(
 pub async fn logout_everywhere(
     State(state): State<SharedState>,
     Session(session): Session,
-) -> impl IntoResponse {
-    StatusCode::NOT_IMPLEMENTED
+    cookies: CookieJar,
+) -> Result<impl IntoResponse, AppError> {
+    queries::delete_all_sessions(&state.db, &session.user_id).await?;
+
+    let removal_cookie = new_session_cookie(&state.config.auth, "");
+    Ok((StatusCode::NO_CONTENT, cookies.remove(removal_cookie)))
 }

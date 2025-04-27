@@ -2,6 +2,7 @@ use super::models;
 use sqlx::types::ipnet::IpNet;
 use sqlx::PgPool;
 use std::net::IpAddr;
+use uuid::Uuid;
 
 pub async fn find_user_id_by_email(
     pool: &PgPool,
@@ -112,8 +113,16 @@ pub async fn get_session_by_token_and_update_access_time(
     }))
 }
 
-pub async fn delete_session(pool: &PgPool, session_id: &uuid::Uuid) -> Result<(), sqlx::Error> {
+pub async fn delete_session(pool: &PgPool, session_id: &Uuid) -> Result<(), sqlx::Error> {
     sqlx::query!("DELETE FROM sessions WHERE id = $1", session_id)
+        .execute(pool)
+        .await?;
+
+    Ok(())
+}
+
+pub(crate) async fn delete_all_sessions(pool: &PgPool, user_id: &Uuid) -> Result<(), sqlx::Error> {
+    sqlx::query!("DELETE FROM sessions WHERE user_id = $1", user_id)
         .execute(pool)
         .await?;
 
