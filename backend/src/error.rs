@@ -1,5 +1,3 @@
-mod auth;
-
 use axum::body::Body;
 use axum::http::{Response, StatusCode};
 use axum::response::IntoResponse;
@@ -61,6 +59,40 @@ impl AppError {
             message: message.into(),
             status,
             details: Some(details),
+        }
+    }
+}
+
+impl From<anyhow::Error> for AppError {
+    fn from(err: anyhow::Error) -> Self {
+        // log error
+        tracing::error!(err=?err, "An unknown internal server error occurred.");
+
+        AppError::new(
+            "UNKNOWN_ERROR",
+            "An internal server error occurred. Please try again later.",
+            StatusCode::INTERNAL_SERVER_ERROR,
+        )
+    }
+}
+
+const DATABASE_ERROR: &str = "DATABASE_ERROR";
+impl From<sqlx::Error> for AppError {
+    fn from(err: sqlx::Error) -> Self {
+        match err {
+            sqlx::Error::RowNotFound => AppError::new(
+                DATABASE_ERROR,
+                "The requested resource was not found.",
+                StatusCode::NOT_FOUND,
+            ),
+            _ => {
+                tracing::error!(err=?err, "An unknown database error occurred.");
+                AppError::new(
+                    DATABASE_ERROR,
+                    "An internal database error occurred. Please try again later.",
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                )
+            }
         }
     }
 }

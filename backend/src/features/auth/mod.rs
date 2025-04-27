@@ -1,6 +1,7 @@
 use crate::state::SharedState;
 use axum::routing::post;
 
+mod errors;
 mod handlers;
 mod queries;
 mod schemas;
