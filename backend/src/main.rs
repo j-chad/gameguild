@@ -19,7 +19,7 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::info!("Starting application in {} environment", config.env);
     let db = connect_db(&config.postgres).await?;
-    let app_state: SharedState = Arc::new(AppState::new(db));
+    let app_state: SharedState = Arc::new(AppState::new(db, config.clone()));
 
     let app = create_app(app_state);
     let addr = format!("{}:{}", config.app.bind_address, config.app.port);

@@ -5,6 +5,8 @@ use axum::http::StatusCode;
 pub enum AuthError {
     UserAlreadyExists(String), // user identifier
     InvalidCredentials,
+    MissingToken,
+    ExpiredToken,
 }
 
 impl From<AuthError> for AppError {
@@ -18,6 +20,16 @@ impl From<AuthError> for AppError {
             AuthError::InvalidCredentials => AppError::new(
                 "INVALID_CREDENTIALS",
                 "Invalid identifier or password",
+                StatusCode::UNAUTHORIZED,
+            ),
+            AuthError::MissingToken => AppError::new(
+                "MISSING_SESSION_TOKEN",
+                "Session token is missing. Please log in.",
+                StatusCode::UNAUTHORIZED,
+            ),
+            AuthError::ExpiredToken => AppError::new(
+                "EXPIRED_SESSION_TOKEN",
+                "Session token is expired. Please log in again.",
                 StatusCode::UNAUTHORIZED,
             ),
         }

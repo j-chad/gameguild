@@ -1,11 +1,15 @@
 use super::schemas::{LoginRequest, NewSessionResponse, RegisterRequest};
 use super::service;
 use crate::error::AppError;
+use crate::features::auth::middleware::Session;
 use crate::state::SharedState;
 use axum::extract::{ConnectInfo, State};
+use axum::http::header::USER_AGENT;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
 use axum::Json;
+use axum_extra::extract::cookie::Cookie;
+use axum_extra::extract::CookieJar;
 use std::net::SocketAddr;
 use validator::Validate;
 
@@ -13,6 +17,7 @@ pub async fn register(
     State(state): State<SharedState>,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     headers: HeaderMap,
+    cookies: CookieJar,
     Json(body): Json<RegisterRequest>,
 ) -> Result<impl IntoResponse, AppError> {
     body.validate()?;
@@ -21,7 +26,7 @@ pub async fn register(
 
     let ip_addr = addr.ip();
     let user_agent = headers
-        .get("User-Agent")
+        .get(USER_AGENT)
         .and_then(|v| v.to_str().ok())
         .map(std::string::ToString::to_string);
 
@@ -29,6 +34,10 @@ pub async fn register(
 
     Ok((
         StatusCode::CREATED,
+        cookies.add(Cookie::new(
+            state.config.auth.session_cookie_name.clone(),
+            session_token.clone(),
+        )),
         Json(NewSessionResponse {
             user_id: user_id.to_string(),
             session_token,
@@ -40,6 +49,7 @@ pub async fn login(
     State(state): State<SharedState>,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     headers: HeaderMap,
+    cookies: CookieJar,
     Json(body): Json<LoginRequest>,
 ) -> Result<impl IntoResponse, AppError> {
     body.validate()?;
@@ -54,7 +64,7 @@ pub async fn login(
 
     let ip_addr = addr.ip();
     let user_agent = headers
-        .get("User-Agent")
+        .get(USER_AGENT)
         .and_then(|v| v.to_str().ok())
         .map(std::string::ToString::to_string);
 
@@ -62,6 +72,10 @@ pub async fn login(
 
     Ok((
         StatusCode::OK,
+        cookies.add(Cookie::new(
+            state.config.auth.session_cookie_name.clone(),
+            session_token.clone(),
+        )),
         Json(NewSessionResponse {
             user_id: user_id.to_string(),
             session_token,
@@ -69,8 +83,8 @@ pub async fn login(
     ))
 }
 
-pub async fn logout(State(_): State<SharedState>) -> impl IntoResponse {
-    StatusCode::NOT_IMPLEMENTED
+pub async fn logout(State(_): State<SharedState>, Session(session): Session) -> impl IntoResponse {
+    Json(session.id.to_string())
 }
 
 pub async fn logout_everywhere(State(_): State<SharedState>) -> impl IntoResponse {

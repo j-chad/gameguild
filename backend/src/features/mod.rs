@@ -1,7 +1,7 @@
 use crate::state::SharedState;
 use axum::Router;
 
-mod auth;
+pub mod auth;
 mod health;
 
 pub fn build_router() -> Router<SharedState> {

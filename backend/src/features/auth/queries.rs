@@ -1,3 +1,4 @@
+use super::models;
 use sqlx::types::ipnet::IpNet;
 use sqlx::PgPool;
 use std::net::IpAddr;
@@ -82,4 +83,24 @@ pub async fn find_user_id_and_pw_by_username_or_email(
     .await?;
 
     Ok(record.map(|r| (r.id, r.password_hash)))
+}
+
+pub async fn get_session_by_token(
+    pool: &PgPool,
+    token: &str,
+) -> Result<Option<models::Session>, sqlx::Error> {
+    let record = sqlx::query!("SELECT * FROM sessions WHERE token = $1 LIMIT 1", token)
+        .fetch_optional(pool)
+        .await?;
+
+    Ok(record.map(|r| models::Session {
+        id: r.id,
+        user_id: r.user_id,
+        token: r.token,
+        created_at: r.created_at,
+        expires_at: r.expires_at,
+        last_seen_at: r.last_seen_at,
+        user_agent: r.user_agent,
+        ip_address: r.ip_address.map(|net| net.addr()),
+    }))
 }

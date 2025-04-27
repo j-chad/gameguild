@@ -11,3 +11,6 @@ lazy=false
 [logging]
 level="info"
 format="pretty"
+
+[auth]
+session_cookie_name="session"
