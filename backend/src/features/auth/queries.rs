@@ -111,3 +111,11 @@ pub async fn get_session_by_token_and_update_access_time(
         ip_address: r.ip_address.map(|net| net.addr()),
     }))
 }
+
+pub async fn delete_session(pool: &PgPool, session_id: &uuid::Uuid) -> Result<(), sqlx::Error> {
+    sqlx::query!("DELETE FROM sessions WHERE id = $1", session_id)
+        .execute(pool)
+        .await?;
+
+    Ok(())
+}

@@ -1,14 +1,14 @@
 use super::schemas::{LoginRequest, NewSessionResponse, RegisterRequest};
-use super::service;
+use super::{queries, service};
 use crate::error::AppError;
 use crate::features::auth::middleware::Session;
+use crate::features::auth::utils::cookie::new_session_cookie;
 use crate::state::SharedState;
 use axum::extract::{ConnectInfo, State};
 use axum::http::header::USER_AGENT;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
 use axum::Json;
-use axum_extra::extract::cookie::Cookie;
 use axum_extra::extract::CookieJar;
 use std::net::SocketAddr;
 use validator::Validate;
@@ -31,13 +31,11 @@ pub async fn register(
         .map(std::string::ToString::to_string);
 
     let session_token = service::new_session(&state.db, user_id, Some(ip_addr), user_agent).await?;
+    let session_cookie = new_session_cookie(&state.config.auth, &session_token);
 
     Ok((
         StatusCode::CREATED,
-        cookies.add(Cookie::new(
-            state.config.auth.session_cookie_name.clone(),
-            session_token.clone(),
-        )),
+        cookies.add(session_cookie),
         Json(NewSessionResponse {
             user_id: user_id.to_string(),
             session_token,
@@ -69,13 +67,11 @@ pub async fn login(
         .map(std::string::ToString::to_string);
 
     let session_token = service::new_session(&state.db, user_id, Some(ip_addr), user_agent).await?;
+    let session_cookie = new_session_cookie(&state.config.auth, &session_token);
 
     Ok((
         StatusCode::OK,
-        cookies.add(Cookie::new(
-            state.config.auth.session_cookie_name.clone(),
-            session_token.clone(),
-        )),
+        cookies.add(session_cookie),
         Json(NewSessionResponse {
             user_id: user_id.to_string(),
             session_token,
@@ -83,10 +79,20 @@ pub async fn login(
     ))
 }
 
-pub async fn logout(State(_): State<SharedState>, Session(session): Session) -> impl IntoResponse {
-    Json(format!("{:?}", session))
+pub async fn logout(
+    State(state): State<SharedState>,
+    Session(session): Session,
+    cookies: CookieJar,
+) -> Result<impl IntoResponse, AppError> {
+    queries::delete_session(&state.db, &session.id).await?;
+
+    let removal_cookie = new_session_cookie(&state.config.auth, "");
+    Ok((StatusCode::NO_CONTENT, cookies.remove(removal_cookie)))
 }
 
-pub async fn logout_everywhere(State(_): State<SharedState>) -> impl IntoResponse {
+pub async fn logout_everywhere(
+    State(state): State<SharedState>,
+    Session(session): Session,
+) -> impl IntoResponse {
     StatusCode::NOT_IMPLEMENTED
 }

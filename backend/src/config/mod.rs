@@ -63,6 +63,7 @@ pub struct LoggingSettings {
 #[derive(Debug, Deserialize, Clone)]
 pub struct AuthSettings {
     pub session_cookie_name: String,
+    pub session_cookie_secure: bool,
 }
 
 #[derive(Debug, Deserialize)]

@@ -1,2 +1,5 @@
 [postgres]
 url="postgres://postgres:postgres@localhost:5432/gameguild"
+
+[auth]
+session_cookie_secure=false

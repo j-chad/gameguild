@@ -14,3 +14,4 @@ format="pretty"
 
 [auth]
 session_cookie_name="session"
+session_cookie_secure=true
