@@ -84,7 +84,7 @@ pub async fn login(
 }
 
 pub async fn logout(State(_): State<SharedState>, Session(session): Session) -> impl IntoResponse {
-    Json(session.id.to_string())
+    Json(format!("{:?}", session))
 }
 
 pub async fn logout_everywhere(State(_): State<SharedState>) -> impl IntoResponse {

@@ -3,7 +3,6 @@ use std::fmt::Debug;
 pub struct Session {
     pub id: uuid::Uuid,
     pub user_id: uuid::Uuid,
-    pub token: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub expires_at: chrono::DateTime<chrono::Utc>,
     pub last_seen_at: chrono::DateTime<chrono::Utc>,
