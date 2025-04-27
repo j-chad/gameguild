@@ -18,7 +18,7 @@ pub async fn register(
     let user_agent = headers
         .get("User-Agent")
         .and_then(|v| v.to_str().ok())
-        .map(|s| s.to_string());
+        .map(std::string::ToString::to_string);
 
     let user_id = service::register_user(&state.db, &body).await?;
     let session_token = service::new_session(&state.db, user_id, Some(ip_addr), user_agent).await?;

@@ -60,20 +60,19 @@ impl From<anyhow::Error> for AppError {
 const DATABASE_ERROR: &str = "DATABASE_ERROR";
 impl From<sqlx::Error> for AppError {
     fn from(err: sqlx::Error) -> Self {
-        match err {
-            sqlx::Error::RowNotFound => AppError::new(
+        if let sqlx::Error::RowNotFound = err {
+            AppError::new(
                 DATABASE_ERROR,
                 "The requested resource was not found.",
                 StatusCode::NOT_FOUND,
-            ),
-            _ => {
-                tracing::error!(err=?err, "An unknown database error occurred.");
-                AppError::new(
-                    DATABASE_ERROR,
-                    "An internal database error occurred. Please try again later.",
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                )
-            }
+            )
+        } else {
+            tracing::error!(err=?err, "An unknown database error occurred.");
+            AppError::new(
+                DATABASE_ERROR,
+                "An internal database error occurred. Please try again later.",
+                StatusCode::INTERNAL_SERVER_ERROR,
+            )
         }
     }
 }

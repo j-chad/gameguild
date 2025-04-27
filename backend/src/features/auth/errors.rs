@@ -12,7 +12,7 @@ impl From<AuthError> for AppError {
         match err {
             AuthError::UserAlreadyExists(identifier) => AppError::new(
                 "USER_ALREADY_EXISTS",
-                format!("User {} already exists", identifier),
+                format!("User {identifier} already exists"),
                 StatusCode::CONFLICT,
             ),
             AuthError::PasswordHashingFailed => AppError::new(

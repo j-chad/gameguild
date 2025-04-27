@@ -22,9 +22,9 @@ pub async fn run_health_checks(state: &SharedState) -> HealthReport {
     let mut checks: HashMap<&'static str, HealthCheckResult> = HashMap::new();
 
     checks.insert("database", check_database(state).await);
-    checks.insert("disk", check_disk_space().await);
-    checks.insert("memory", check_memory().await);
-    checks.insert("cpu", check_cpu().await);
+    checks.insert("disk", check_disk_space());
+    checks.insert("memory", check_memory());
+    checks.insert("cpu", check_cpu());
 
     let result = if checks
         .values()
@@ -43,12 +43,12 @@ async fn check_database(state: &SharedState) -> HealthCheckResult {
 
     match timeout(timeout_duration, state.db.acquire()).await {
         Ok(Ok(_)) => HealthCheckResult::Ok,
-        Ok(Err(e)) => HealthCheckResult::Failed(format!("connection failed: {}", e)),
+        Ok(Err(e)) => HealthCheckResult::Failed(format!("connection failed: {e}")),
         Err(_) => HealthCheckResult::Failed("connection timed out".to_string()),
     }
 }
 
-async fn check_disk_space() -> HealthCheckResult {
+fn check_disk_space() -> HealthCheckResult {
     const DISK_SPACE_THRESHOLD: u64 = 500 * 1024 * 1024; // 500 MB
 
     let disks = sysinfo::Disks::new_with_refreshed_list_specifics(
@@ -68,7 +68,7 @@ async fn check_disk_space() -> HealthCheckResult {
     HealthCheckResult::Ok
 }
 
-async fn check_memory() -> HealthCheckResult {
+fn check_memory() -> HealthCheckResult {
     const MEMORY_THRESHOLD: u64 = 100 * 1024 * 1024; // 100 MB
 
     let sys = sysinfo::System::new_with_specifics(
@@ -78,13 +78,13 @@ async fn check_memory() -> HealthCheckResult {
 
     let memory = sys.available_memory();
     if memory < MEMORY_THRESHOLD {
-        return HealthCheckResult::Failed(format!("Low memory: {} bytes available", memory));
+        return HealthCheckResult::Failed(format!("Low memory: {memory} bytes available"));
     }
 
     HealthCheckResult::Ok
 }
 
-async fn check_cpu() -> HealthCheckResult {
+fn check_cpu() -> HealthCheckResult {
     const CPU_THRESHOLD: f32 = 80.0; // 80%
 
     let sys = sysinfo::System::new_with_specifics(
@@ -94,7 +94,7 @@ async fn check_cpu() -> HealthCheckResult {
 
     let cpu_usage = sys.global_cpu_usage();
     if cpu_usage > CPU_THRESHOLD {
-        return HealthCheckResult::Failed(format!("High CPU usage: {:.2}%", cpu_usage));
+        return HealthCheckResult::Failed(format!("High CPU usage: {cpu_usage:.2}%"));
     }
 
     HealthCheckResult::Ok

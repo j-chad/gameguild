@@ -48,7 +48,7 @@ pub async fn new_session(
     user_agent: Option<String>,
 ) -> Result<String, AppError> {
     let id = uuid::Uuid::new_v4();
-    let token = utils::session_token::new(&SESSION_TOKEN_SIZE)?;
+    let token = utils::session_token::new(SESSION_TOKEN_SIZE)?;
     let expires_at = chrono::Utc::now() + SESSION_EXPIRATION;
 
     queries::new_session(pool, id, user_id, &token, expires_at, user_agent, ip_addr)

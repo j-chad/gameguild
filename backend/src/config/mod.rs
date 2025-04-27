@@ -21,7 +21,7 @@ impl Display for AppEnv {
             AppEnv::Stage => "stage",
             AppEnv::Production => "production",
         };
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
 
