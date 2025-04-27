@@ -1,4 +1,4 @@
-use super::schemas::{RegisterRequest, RegisterResponse};
+use super::schemas::{LoginRequest, RegisterRequest, RegisterResponse};
 use super::service;
 use crate::error::AppError;
 use crate::state::SharedState;
@@ -32,8 +32,17 @@ pub async fn register(
     ))
 }
 
-pub async fn login(State(_): State<SharedState>) -> impl IntoResponse {
-    StatusCode::NOT_IMPLEMENTED
+pub async fn login(
+    State(state): State<SharedState>,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
+    Json(body): Json<LoginRequest>,
+) -> impl IntoResponse {
+    let ip_addr = addr.ip();
+    let user_agent = headers
+        .get("User-Agent")
+        .and_then(|v| v.to_str().ok())
+        .map(std::string::ToString::to_string);
 }
 
 pub async fn logout(State(_): State<SharedState>) -> impl IntoResponse {
