@@ -1,4 +1,4 @@
-use super::queries::{find_user_id_by_email, find_user_id_by_username, insert_user};
+use super::queries::{find_user_id_by_email, find_user_id_by_username, new_user};
 use super::schemas::RegisterRequest;
 use super::utils::password::hash_password;
 use crate::error::AppError;
@@ -22,9 +22,17 @@ pub async fn register_user(
         AuthError::PasswordHashingFailed
     })?;
 
-    insert_user(pool, user_id, &data.email, &data.username, &password_hash)
+    new_user(pool, user_id, &data.email, &data.username, &password_hash)
         .await
-        .map_err(|_| anyhow::anyhow!("Failed to insert user"))?;
+        .map_err(|err| {
+            tracing::error!("failed to insert user into database");
+            err
+        })?;
 
+    tracing::debug!(id = user_id.to_string(), "user registered successfully");
     Ok(user_id)
+}
+
+pub async fn new_session(pool: &sqlx::PgPool, user_id: uuid::Uuid) -> Result<String, AppError> {
+    Ok("session_token".to_string())
 }

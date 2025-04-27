@@ -1,3 +1,4 @@
+use sqlx::types::ipnet::IpNet;
 use sqlx::PgPool;
 
 pub async fn find_user_id_by_email(
@@ -22,7 +23,7 @@ pub async fn find_user_id_by_username(
     Ok(record.map(|r| r.id))
 }
 
-pub async fn insert_user(
+pub async fn new_user(
     pool: &PgPool,
     id: uuid::Uuid,
     email: &str,
@@ -35,6 +36,30 @@ pub async fn insert_user(
         email,
         username,
         password_hash
+    )
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn new_session(
+    pool: &PgPool,
+    id: uuid::Uuid,
+    user_id: uuid::Uuid,
+    token: &str,
+    expires_at: chrono::DateTime<chrono::Utc>,
+    user_agent: Option<String>,
+    ip_address: Option<IpNet>,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "INSERT INTO sessions (id, user_id, token, expires_at, user_agent, ip_address) VALUES ($1, $2, $3, $4, $5, $6)",
+        id,
+        user_id,
+        token,
+        expires_at,
+        user_agent,
+        ip_address
     )
     .execute(pool)
     .await?;

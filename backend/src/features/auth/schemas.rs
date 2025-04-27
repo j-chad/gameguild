@@ -9,6 +9,6 @@ pub struct RegisterRequest {
 
 #[derive(Debug, Serialize)]
 pub struct RegisterResponse {
-    pub success: bool,
-    pub message: String,
+    pub user_id: String,
+    pub session_token: String,
 }
