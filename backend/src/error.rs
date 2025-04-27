@@ -42,6 +42,11 @@ impl AppError {
             details: None,
         }
     }
+
+    pub fn with_details(mut self, details: Value) -> Self {
+        self.details = Some(details);
+        self
+    }
 }
 
 impl From<anyhow::Error> for AppError {
@@ -74,5 +79,17 @@ impl From<sqlx::Error> for AppError {
                 StatusCode::INTERNAL_SERVER_ERROR,
             )
         }
+    }
+}
+
+impl From<validator::ValidationErrors> for AppError {
+    fn from(err: validator::ValidationErrors) -> Self {
+        let details = serde_json::to_value(&err).unwrap_or_default();
+        AppError::new(
+            "VALIDATION_ERROR",
+            "The request data is invalid.",
+            StatusCode::BAD_REQUEST,
+        )
+        .with_details(details)
     }
 }

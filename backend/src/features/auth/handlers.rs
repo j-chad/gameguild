@@ -7,6 +7,7 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
 use axum::Json;
 use std::net::SocketAddr;
+use validator::Validate;
 
 pub async fn register(
     State(state): State<SharedState>,
@@ -14,6 +15,8 @@ pub async fn register(
     headers: HeaderMap,
     Json(body): Json<RegisterRequest>,
 ) -> Result<impl IntoResponse, AppError> {
+    body.validate()?;
+
     let ip_addr = addr.ip();
     let user_agent = headers
         .get("User-Agent")
