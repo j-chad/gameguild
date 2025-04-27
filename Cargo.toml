@@ -4,3 +4,6 @@ members = ["backend"]
 
 [profile.dev.package.sqlx-macros]
 opt-level = 3
+
+[workspace.lints.clippy]
+pedantic = "warn"
