@@ -11,3 +11,32 @@ pub fn hash_password(password: &str) -> Result<String, argon2::password_hash::Er
         .hash_password(password_bytes, &salt)
         .map(|hash| hash.to_string())
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::features::auth::utils::password::hash_password;
+
+    #[test]
+    fn test_hash_password() {
+        let password = "my_secure_password";
+        let hashed_password = hash_password(password).unwrap();
+        assert!(!hashed_password.is_empty());
+        assert!(hashed_password.starts_with("$argon2id$"));
+    }
+
+    #[test]
+    fn test_hash_password_empty() {
+        let password = "";
+        let hashed_password = hash_password(password).unwrap();
+        assert!(!hashed_password.is_empty());
+        assert!(hashed_password.starts_with("$argon2id$"));
+    }
+
+    #[test]
+    fn test_hash_password_special_characters() {
+        let password = "!@#$%^&*()_+";
+        let hashed_password = hash_password(password).unwrap();
+        assert!(!hashed_password.is_empty());
+        assert!(hashed_password.starts_with("$argon2id$"));
+    }
+}
