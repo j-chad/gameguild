@@ -12,7 +12,7 @@ pub fn init_tracing(config: &config::LoggingSettings) -> anyhow::Result<()> {
     let subscriber = registry().with(filter);
 
     match config.format {
-        config::LogFormat::JSON => {
+        config::LogFormat::Json => {
             let json_layer = tracing_subscriber::fmt::layer()
                 .json()
                 .with_writer(std::io::stdout);

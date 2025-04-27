@@ -2,7 +2,6 @@ use crate::state::SharedState;
 use serde::Serialize;
 use sqlx::__rt::timeout;
 use std::collections::HashMap;
-use sysinfo;
 
 #[derive(Serialize)]
 #[serde(tag = "status", content = "reason")]

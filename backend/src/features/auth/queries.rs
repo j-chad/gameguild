@@ -53,12 +53,6 @@ pub async fn new_session(
     user_agent: Option<String>,
     ip_address: Option<IpAddr>,
 ) -> Result<(), sqlx::Error> {
-    // convert the IP address to a format suitable for the database
-    let net_ip_address = match ip_address {
-        Some(ip) => Some(IpNet::from(ip)),
-        None => None,
-    };
-
     sqlx::query!(
         "INSERT INTO sessions (id, user_id, token, expires_at, user_agent, ip_address) VALUES ($1, $2, $3, $4, $5, $6)",
         id,
@@ -66,7 +60,7 @@ pub async fn new_session(
         token,
         expires_at,
         user_agent,
-        net_ip_address
+        ip_address.map(IpNet::from)
     )
     .execute(pool)
     .await?;

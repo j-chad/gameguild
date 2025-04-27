@@ -42,25 +42,6 @@ impl AppError {
             details: None,
         }
     }
-
-    pub fn with_details<T>(
-        code: &'static str,
-        message: impl Into<String>,
-        status: StatusCode,
-        details: T,
-    ) -> Self
-    where
-        T: Serialize,
-    {
-        let details = serde_json::to_value(details).unwrap_or_else(|_| Value::Null);
-
-        Self {
-            code,
-            message: message.into(),
-            status,
-            details: Some(details),
-        }
-    }
 }
 
 impl From<anyhow::Error> for AppError {

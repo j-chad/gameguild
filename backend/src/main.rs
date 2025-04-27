@@ -1,7 +1,6 @@
 use crate::app::create_app;
 use crate::db::connect_db;
 use crate::state::{AppState, SharedState};
-use axum::ServiceExt;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
@@ -20,7 +19,7 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::info!("Starting application in {} environment", config.env);
     let db = connect_db(&config.postgres).await?;
-    let app_state: SharedState = Arc::new(AppState::new(db, config.clone()));
+    let app_state: SharedState = Arc::new(AppState::new(db));
 
     let app = create_app(app_state);
     let addr = format!("{}:{}", config.app.bind_address, config.app.port);
