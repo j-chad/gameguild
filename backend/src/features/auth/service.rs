@@ -3,6 +3,15 @@ use super::schemas::RegisterRequest;
 use super::utils::password::hash_password;
 use crate::error::AppError;
 use crate::features::auth::errors::AuthError;
+use crate::features::auth::{queries, utils};
+use base64::Engine;
+use chrono::Duration;
+use rand::rngs::OsRng;
+use rand::TryRngCore;
+use std::net::IpAddr;
+
+const SESSION_TOKEN_SIZE: usize = 64;
+const SESSION_EXPIRATION: Duration = Duration::weeks(2);
 
 pub async fn register_user(
     pool: &sqlx::PgPool,
@@ -33,6 +42,22 @@ pub async fn register_user(
     Ok(user_id)
 }
 
-pub async fn new_session(pool: &sqlx::PgPool, user_id: uuid::Uuid) -> Result<String, AppError> {
-    Ok("session_token".to_string())
+pub async fn new_session(
+    pool: &sqlx::PgPool,
+    user_id: uuid::Uuid,
+    ip_addr: Option<IpAddr>,
+    user_agent: Option<String>,
+) -> Result<String, AppError> {
+    let id = uuid::Uuid::new_v4();
+    let token = utils::session_token::new(&SESSION_TOKEN_SIZE)?;
+    let expires_at = chrono::Utc::now() + SESSION_EXPIRATION;
+
+    queries::new_session(pool, id, user_id, &token, expires_at, user_agent, ip_addr)
+        .await
+        .map_err(|err| {
+            tracing::error!("failed to create new session");
+            err
+        })?;
+
+    Ok(token)
 }

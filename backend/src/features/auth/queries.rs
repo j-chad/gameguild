@@ -1,5 +1,6 @@
 use sqlx::types::ipnet::IpNet;
 use sqlx::PgPool;
+use std::net::IpAddr;
 
 pub async fn find_user_id_by_email(
     pool: &PgPool,
@@ -50,8 +51,14 @@ pub async fn new_session(
     token: &str,
     expires_at: chrono::DateTime<chrono::Utc>,
     user_agent: Option<String>,
-    ip_address: Option<IpNet>,
+    ip_address: Option<IpAddr>,
 ) -> Result<(), sqlx::Error> {
+    // convert the IP address to a format suitable for the database
+    let net_ip_address = match ip_address {
+        Some(ip) => Some(IpNet::from(ip)),
+        None => None,
+    };
+
     sqlx::query!(
         "INSERT INTO sessions (id, user_id, token, expires_at, user_agent, ip_address) VALUES ($1, $2, $3, $4, $5, $6)",
         id,
@@ -59,7 +66,7 @@ pub async fn new_session(
         token,
         expires_at,
         user_agent,
-        ip_address
+        net_ip_address
     )
     .execute(pool)
     .await?;

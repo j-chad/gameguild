@@ -1,6 +1,8 @@
 use crate::app::create_app;
 use crate::db::connect_db;
 use crate::state::{AppState, SharedState};
+use axum::ServiceExt;
+use std::net::SocketAddr;
 use std::sync::Arc;
 
 mod app;
@@ -26,7 +28,11 @@ async fn main() -> anyhow::Result<()> {
     let listener = tokio::net::TcpListener::bind(addr).await?;
     tracing::info!("Listening on {}", listener.local_addr()?);
 
-    axum::serve(listener, app).await?;
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await?;
 
     Ok(())
 }

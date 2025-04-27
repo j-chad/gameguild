@@ -1,20 +1,35 @@
-use super::schemas::RegisterRequest;
+use super::schemas::{RegisterRequest, RegisterResponse};
 use super::service;
 use crate::error::AppError;
 use crate::state::SharedState;
-use axum::extract::State;
-use axum::http::StatusCode;
+use axum::extract::{ConnectInfo, State};
+use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
 use axum::Json;
+use std::net::SocketAddr;
 
 pub async fn register(
     State(state): State<SharedState>,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
     Json(body): Json<RegisterRequest>,
 ) -> Result<impl IntoResponse, AppError> {
-    let user_id = service::register_user(&state.db, &body).await?;
-    let session = service::new_session(&state.db, user_id).await?;
+    let ip_addr = addr.ip();
+    let user_agent = headers
+        .get("User-Agent")
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string());
 
-    Ok((StatusCode::CREATED, Json("User registered successfully")))
+    let user_id = service::register_user(&state.db, &body).await?;
+    let session_token = service::new_session(&state.db, user_id, Some(ip_addr), user_agent).await?;
+
+    Ok((
+        StatusCode::CREATED,
+        Json(RegisterResponse {
+            user_id: user_id.to_string(),
+            session_token,
+        }),
+    ))
 }
 
 pub async fn login(State(_): State<SharedState>) -> impl IntoResponse {
