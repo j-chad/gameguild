@@ -4,7 +4,7 @@ use axum::http::StatusCode;
 #[derive(Debug)]
 pub enum AuthError {
     UserAlreadyExists(String), // user identifier
-    PasswordHashingFailed,
+    InvalidCredentials,
 }
 
 impl From<AuthError> for AppError {
@@ -15,10 +15,10 @@ impl From<AuthError> for AppError {
                 format!("User {identifier} already exists"),
                 StatusCode::CONFLICT,
             ),
-            AuthError::PasswordHashingFailed => AppError::new(
-                "PASSWORD_HASHING_FAILED",
-                "Failed to hash password",
-                StatusCode::INTERNAL_SERVER_ERROR,
+            AuthError::InvalidCredentials => AppError::new(
+                "INVALID_CREDENTIALS",
+                "Invalid identifier or password",
+                StatusCode::UNAUTHORIZED,
             ),
         }
     }

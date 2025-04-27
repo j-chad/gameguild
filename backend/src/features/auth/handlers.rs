@@ -1,4 +1,4 @@
-use super::schemas::{LoginRequest, RegisterRequest, RegisterResponse};
+use super::schemas::{LoginRequest, NewSessionResponse, RegisterRequest};
 use super::service;
 use crate::error::AppError;
 use crate::state::SharedState;
@@ -17,18 +17,19 @@ pub async fn register(
 ) -> Result<impl IntoResponse, AppError> {
     body.validate()?;
 
+    let user_id = service::register_user(&state.db, &body).await?;
+
     let ip_addr = addr.ip();
     let user_agent = headers
         .get("User-Agent")
         .and_then(|v| v.to_str().ok())
         .map(std::string::ToString::to_string);
 
-    let user_id = service::register_user(&state.db, &body).await?;
     let session_token = service::new_session(&state.db, user_id, Some(ip_addr), user_agent).await?;
 
     Ok((
         StatusCode::CREATED,
-        Json(RegisterResponse {
+        Json(NewSessionResponse {
             user_id: user_id.to_string(),
             session_token,
         }),
@@ -40,12 +41,32 @@ pub async fn login(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     headers: HeaderMap,
     Json(body): Json<LoginRequest>,
-) -> impl IntoResponse {
+) -> Result<impl IntoResponse, AppError> {
+    body.validate()?;
+
+    let user_id = service::login_user(
+        &state.db,
+        body.username.as_deref(),
+        body.email.as_deref(),
+        &body.password,
+    )
+    .await?;
+
     let ip_addr = addr.ip();
     let user_agent = headers
         .get("User-Agent")
         .and_then(|v| v.to_str().ok())
         .map(std::string::ToString::to_string);
+
+    let session_token = service::new_session(&state.db, user_id, Some(ip_addr), user_agent).await?;
+
+    Ok((
+        StatusCode::OK,
+        Json(NewSessionResponse {
+            user_id: user_id.to_string(),
+            session_token,
+        }),
+    ))
 }
 
 pub async fn logout(State(_): State<SharedState>) -> impl IntoResponse {

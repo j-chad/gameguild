@@ -13,7 +13,7 @@ pub struct RegisterRequest {
 }
 
 #[derive(Debug, Serialize)]
-pub struct RegisterResponse {
+pub struct NewSessionResponse {
     pub user_id: String,
     pub session_token: String,
 }

@@ -4,16 +4,16 @@ use super::utils::password::hash_password;
 use crate::error::AppError;
 use crate::features::auth::errors::AuthError;
 use crate::features::auth::{queries, utils};
+use anyhow::anyhow;
 use chrono::Duration;
+use once_cell::unsync::Lazy;
+use sqlx::PgPool;
 use std::net::IpAddr;
 
 const SESSION_TOKEN_SIZE: usize = 64;
 const SESSION_EXPIRATION: Duration = Duration::weeks(2);
 
-pub async fn register_user(
-    pool: &sqlx::PgPool,
-    data: &RegisterRequest,
-) -> Result<uuid::Uuid, AppError> {
+pub async fn register_user(pool: &PgPool, data: &RegisterRequest) -> Result<uuid::Uuid, AppError> {
     if find_user_id_by_email(pool, &data.email).await?.is_some() {
         return Err(AuthError::UserAlreadyExists(data.email.clone()).into());
     }
@@ -28,7 +28,7 @@ pub async fn register_user(
     let user_id = uuid::Uuid::now_v7();
     let password_hash = hash_password(&data.password).map_err(|e| {
         tracing::error!(err=?e, "failed to hash password");
-        AuthError::PasswordHashingFailed
+        anyhow!("failed to hash password")
     })?;
 
     new_user(pool, user_id, &data.email, &data.username, &password_hash)
@@ -58,4 +58,37 @@ pub async fn new_session(
         })?;
 
     Ok(token)
+}
+
+// Used to prevent time-based attacks by always returning a valid hash
+const FAKE_PASSWORD_HASH: Lazy<String> =
+    Lazy::new(|| hash_password("fake_password_123").expect("Failed to create fake hash"));
+
+pub(crate) async fn login_user(
+    pool: &PgPool,
+    username: Option<&str>,
+    email: Option<&str>,
+    password: &String,
+) -> Result<uuid::Uuid, AppError> {
+    let (user_id, password_hash) =
+        queries::find_user_id_and_pw_by_username_or_email(pool, username, email)
+            .await?
+            .unwrap_or((uuid::Uuid::nil(), FAKE_PASSWORD_HASH.to_string()));
+
+    utils::password::validate_password(password, &password_hash).map_err(|err| -> AppError {
+        match err {
+            argon2::password_hash::Error::Password => AuthError::InvalidCredentials.into(),
+            _ => {
+                tracing::error!(err = ?err, "failed to validate password");
+                anyhow::anyhow!("failed to validate password").into()
+            }
+        }
+    })?;
+
+    // If the user_id is nil, it means the user was not found
+    if user_id == uuid::Uuid::nil() {
+        return Err(AuthError::InvalidCredentials.into());
+    }
+
+    Ok(user_id)
 }

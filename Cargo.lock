@@ -173,6 +173,7 @@ dependencies = [
  "base64 0.21.7",
  "chrono",
  "config",
+ "once_cell",
  "rand 0.9.1",
  "serde",
  "serde_json",

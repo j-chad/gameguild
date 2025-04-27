@@ -67,3 +67,19 @@ pub async fn new_session(
 
     Ok(())
 }
+
+pub async fn find_user_id_and_pw_by_username_or_email(
+    pool: &PgPool,
+    username: Option<&str>,
+    email: Option<&str>,
+) -> Result<Option<(uuid::Uuid, String)>, sqlx::Error> {
+    let record = sqlx::query!(
+        "SELECT id, password_hash FROM users WHERE (username = $1 OR email = $2) LIMIT 1",
+        username,
+        email
+    )
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(record.map(|r| (r.id, r.password_hash)))
+}
