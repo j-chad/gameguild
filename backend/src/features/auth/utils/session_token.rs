@@ -27,7 +27,7 @@ mod tests {
     fn test_new_session_token() {
         let token = new(32).unwrap();
         assert_eq!(token.len(), 44); // Base64 URL-safe encoding increases the length
-        assert!(token.chars().all(|c| c.is_ascii()));
+        assert!(token.is_ascii());
     }
 
     #[test]

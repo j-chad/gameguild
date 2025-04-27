@@ -6,9 +6,9 @@ use crate::features::auth::errors::AuthError;
 use crate::features::auth::{queries, utils};
 use anyhow::anyhow;
 use chrono::Duration;
-use once_cell::unsync::Lazy;
 use sqlx::PgPool;
 use std::net::IpAddr;
+use std::sync::LazyLock;
 
 const SESSION_TOKEN_SIZE: usize = 64;
 const SESSION_EXPIRATION: Duration = Duration::weeks(2);
@@ -61,8 +61,8 @@ pub async fn new_session(
 }
 
 // Used to prevent time-based attacks by always returning a valid hash
-const FAKE_PASSWORD_HASH: Lazy<String> =
-    Lazy::new(|| hash_password("fake_password_123").expect("Failed to create fake hash"));
+static FAKE_PASSWORD_HASH: LazyLock<String> =
+    LazyLock::new(|| hash_password("fake_password_123").expect("Failed to create fake hash"));
 
 pub(crate) async fn login_user(
     pool: &PgPool,
@@ -76,12 +76,11 @@ pub(crate) async fn login_user(
             .unwrap_or((uuid::Uuid::nil(), FAKE_PASSWORD_HASH.to_string()));
 
     utils::password::validate_password(password, &password_hash).map_err(|err| -> AppError {
-        match err {
-            argon2::password_hash::Error::Password => AuthError::InvalidCredentials.into(),
-            _ => {
-                tracing::error!(err = ?err, "failed to validate password");
-                anyhow::anyhow!("failed to validate password").into()
-            }
+        if err == argon2::password_hash::Error::Password {
+            AuthError::InvalidCredentials.into()
+        } else {
+            tracing::error!(err = ?err, "failed to validate password");
+            anyhow::anyhow!("failed to validate password").into()
         }
     })?;
 

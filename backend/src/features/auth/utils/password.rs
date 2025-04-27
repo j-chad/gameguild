@@ -14,7 +14,7 @@ pub fn hash_password(password: &str) -> Result<String, argon2::password_hash::Er
 
 pub(crate) fn validate_password(
     password: &String,
-    hash: &String,
+    hash: &str,
 ) -> Result<(), argon2::password_hash::Error> {
     let parsed_hash = argon2::password_hash::PasswordHash::new(hash)?;
     let argon2 = Argon2::default();
